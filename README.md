@@ -37,9 +37,11 @@ An automated infrastructure monitoring, metric aggregation, and incident-respons
 Execute this script on your central monitoring EC2 instance (Amazon Linux 2023 / RHEL):
 
 ```bash
-export SLACK_WEBHOOK_URL="[https://hooks.slack.com/services/YOUR/WEBHOOK/URL](https://hooks.slack.com/services/YOUR/WEBHOOK/URL)"
+export SLACK_WEBHOOK_URL="https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
 chmod +x install-monitoring-stack.sh
 sudo ./install-monitoring-stack.sh
+```
+
 ---
 
 ## 🏷️ AWS EC2 Service Discovery Configuration
@@ -64,3 +66,4 @@ The monitoring engine evaluates the following metric conditions and routes incid
 | **HighCPUUsage** | `(100 - (avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100)) > 80` | `> 2 mins` | `Warning` | Logs runaway process telemetry and alerts Slack |
 | **HighMemoryUsage** | `(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 80` | `> 2 mins` | `Warning` | Alerts Slack and captures active memory metrics |
 | **HighDiskUsage** | `(1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) * 100 > 80` | `> 2 mins` | `Warning` | Flags storage threshold and recommends cache cleanup |
+
