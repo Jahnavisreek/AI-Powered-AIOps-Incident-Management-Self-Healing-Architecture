@@ -9,7 +9,8 @@ An automated infrastructure monitoring, metric aggregation, and incident-respons
 
 ## 📐 Architecture Overview
 
-![Architecture](architecture.png)
+![Uploading Architecture.png…]()
+
 
 ### Incident Workflow Lifecycle:
 1. **Telemetry & Collection:** Node Exporter captures host-level compute, memory, and filesystem metrics across target Linux nodes.
