@@ -41,6 +41,7 @@ export SLACK_WEBHOOK_URL="[https://hooks.slack.com/services/YOUR/WEBHOOK/URL](ht
 chmod +x install-monitoring-stack.sh
 sudo ./install-monitoring-stack.sh
 
+
 ## 🏷️ AWS EC2 Service Discovery Configuration
 
 To allow Prometheus to automatically discover and monitor target EC2 instances without manual configuration, ensure each target instance has the following AWS tag applied:
