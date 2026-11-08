@@ -9,7 +9,7 @@ An automated infrastructure monitoring, metric aggregation, and incident-respons
 
 ## 📐 Architecture Overview
 
-![Uploading Architecture.png…]()
+<img width="1536" height="1024" alt="Architecture" src="https://github.com/user-attachments/assets/1b00ea84-76b5-4ba8-8677-23e8868ced1f" />
 
 
 ### Incident Workflow Lifecycle:
