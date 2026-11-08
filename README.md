@@ -9,6 +9,53 @@ An automated infrastructure monitoring, metric aggregation, and incident-respons
 
 ## 📐 Architecture Overview
 
+### Detailed Workflow Stages:
+
+1. **Metric Exposition & Continuous Scraping**
+   * **Node Exporter** collects host telemetry (CPU idle time, available RAM, disk IO, and filesystem thresholds) on target EC2 nodes.
+   * **Prometheus** polls targets every 15 seconds using dynamic AWS EC2 Service Discovery, identifying nodes tagged with `monitor: node_server`.
+
+2. **Threshold Evaluation & Alert State Transition**
+   * When conditions cross predefined thresholds (e.g., node down or CPU > 80%), Prometheus enters the **`Pending`** state.
+   * If the condition persists longer than the rule duration (1–2 minutes), the state escalates to **`Firing`**.
+
+3. **Intelligent Alert Grouping & Routing**
+   * Firing alerts are dispatched to **Alertmanager** at `localhost:9093`.
+   * Alertmanager de-duplicates alerts, clusters co-occurring alarms from the same instance, and suppresses flapping events using a 5-minute resolve timeout.
+
+4. **Telemetry Dispatch & Diagnostics**
+   * Alerts route through the configured webhook endpoint directly to the incident operations channel.
+   * Incident payloads contain exact alert labels, instance identifiers, and severity classifications (`critical` / `warning`).
+
+5. **ChatOps Notification & Incident Verification**
+   * The team receives formatted, rich alert cards in **Slack** detailing the root issue.
+   * When metric values drop back below warning thresholds, Prometheus and Alertmanager automatically send a `[RESOLVED]` notification.
+
+## 🏗️ Service Architecture & Component Roles
+
+The platform is structured into distinct, modular service layers that handle metric collection, rules processing, routing, and notifications:
+
+| Service / Component | Layer | Port | Runtime Role & Functionality |
+| :--- | :--- | :--- | :--- |
+| **Node Exporter** | Data Collection | `9100` | Lightweight system agent installed on target Linux/EC2 nodes. Collects and exposes raw kernel and OS metrics (CPU usage, RAM allocation, disk filesystem utilization, network I/O) as plain-text scrape targets. |
+| **Prometheus** | Monitoring & Alerting | `9090` | Time-series database and core monitoring engine. Performs automated AWS EC2 service discovery (`ec2_sd_configs`), scrapes Node Exporter metrics every 15s, stores telemetry, and continuously evaluates PromQL alert rule thresholds. |
+| **Alertmanager** | Alert Routing & Deduplication | `9093` | Alert lifecycle management. Ingests raw firing alerts from Prometheus, deduplicates repeated alarms, groups incidents by instance/label, enforces a 5-minute resolve timeout, and dispatches JSON payloads to the configured webhook. |
+| **Grafana** | Visualization & Observability | `3000` | Operational dashboard UI. Connects to Prometheus as a primary data source to visualize compute utilization, active instance count, and historical telemetry trends. |
+| **Slack Integration** | Incident & ChatOps | Webhook (HTTPS) | Incident receiver endpoint. Parses incoming Alertmanager payloads and posts formatted incident notifications directly to the operations channel with alert status, severity, and host tags. |
+
+---
+
+### How the Services Interact (Communication Flow):
+
+1. **Target Node Exporter (`:9100`) $\rightarrow$ Prometheus (`:9090`):**
+   Prometheus queries the AWS EC2 API to find servers with the tag `monitor: node_server`, then initiates an HTTP `GET /metrics` request every 15 seconds to pull hardware data.
+
+2. **Prometheus (`:9090`) $\rightarrow$ Alertmanager (`:9093`):**
+   When a metric threshold fails (e.g., CPU > 80% for 2 minutes), Prometheus creates an alert state (`Pending` $\rightarrow$ `Firing`) and forwards an alert event to Alertmanager over port 9093.
+
+3. **Alertmanager (`:9093`) $\rightarrow$ External Slack Webhook:**
+   Alertmanager groups related alerts to prevent notification spam, matches the route (`receiver: slack`), and sends an HTTPS POST request containing incident summary details and severity labels.
+
 <img width="1536" height="1024" alt="Architecture" src="https://github.com/user-attachments/assets/1b00ea84-76b5-4ba8-8677-23e8868ced1f" />
 
 
