@@ -40,3 +40,26 @@ Execute this script on your central monitoring EC2 instance (Amazon Linux 2023 /
 export SLACK_WEBHOOK_URL="[https://hooks.slack.com/services/YOUR/WEBHOOK/URL](https://hooks.slack.com/services/YOUR/WEBHOOK/URL)"
 chmod +x install-monitoring-stack.sh
 sudo ./install-monitoring-stack.sh
+
+## 🏷️ AWS EC2 Service Discovery Configuration
+
+To allow Prometheus to automatically discover and monitor target EC2 instances without manual configuration, ensure each target instance has the following AWS tag applied:
+
+| Tag Key | Tag Value | Purpose |
+| :--- | :--- | :--- |
+| `monitor` | `node_server` | Target filter for `ec2_sd_configs` |
+
+> **Note:** Ensure the IAM role attached to your Prometheus EC2 instance includes the `ec2:DescribeInstances` policy permission so it can query instances across the region.
+
+---
+
+## ⚙️ Configured PromQL Alert Rules
+
+The monitoring engine evaluates the following metric conditions and routes incident notifications:
+
+| Alert Name | PromQL Expression | Evaluation Duration | Severity | Triggered Action |
+| :--- | :--- | :--- | :--- | :--- |
+| **InstanceDown** | `up == 0` | `> 1 min` | `Critical` | Pushes immediate critical downtime alert to Slack |
+| **HighCPUUsage** | `(100 - (avg by(instance)(rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100)) > 80` | `> 2 mins` | `Warning` | Logs runaway process telemetry and alerts Slack |
+| **HighMemoryUsage** | `(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 80` | `> 2 mins` | `Warning` | Alerts Slack and captures active memory metrics |
+| **HighDiskUsage** | `(1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) * 100 > 80` | `> 2 mins` | `Warning` | Flags storage threshold and recommends cache cleanup |
