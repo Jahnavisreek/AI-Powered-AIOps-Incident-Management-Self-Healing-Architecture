@@ -40,7 +40,7 @@ Execute this script on your central monitoring EC2 instance (Amazon Linux 2023 /
 export SLACK_WEBHOOK_URL="[https://hooks.slack.com/services/YOUR/WEBHOOK/URL](https://hooks.slack.com/services/YOUR/WEBHOOK/URL)"
 chmod +x install-monitoring-stack.sh
 sudo ./install-monitoring-stack.sh
-
+---
 
 ## 🏷️ AWS EC2 Service Discovery Configuration
 
